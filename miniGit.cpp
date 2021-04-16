@@ -12,6 +12,8 @@ using namespace std;
 miniGit::miniGit()  // constructor
 {
     currentCommit = nullptr;
+    name = "";
+    email = "";
 }
 miniGit::~miniGit() // destructor
 {
