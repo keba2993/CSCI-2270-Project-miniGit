@@ -20,6 +20,7 @@ struct fileNode
 {
     string fileName;
     string fileVersion;
+    int versioNum;
     fileNode* next;
 };
 
@@ -63,10 +64,10 @@ class miniGit
         commitNode* getCurrent();
 
         // traverse doubleLL
-        void DLLSearch(int number);
+        commitNode* DLLSearch(int number);
 
         // search singleLL
-        void SLLSearch(int number);
+        bool SLLSearch(string file);
 
     private:
         commitNode* currentCommit;
