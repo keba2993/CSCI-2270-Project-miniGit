@@ -27,6 +27,7 @@ struct fileNode
 struct commitNode
 {
     int commitNum;
+    // do we want to add a message variable
     fileNode* head;
     commitNode* previous;
     commitNode* next;
@@ -38,6 +39,8 @@ class miniGit
         miniGit();
         ~miniGit();
 
+        void init();    // dont really know what this is gonna be yet
+
         // getters and setters for name and email
         void setName(string n);
         void setEmail(string e);
@@ -47,6 +50,9 @@ class miniGit
 
         // display the menu options
         void displayOptions();
+
+        // print out the sturcture DLL w/ SLL
+        void printGit();
 
         // add file 
         void addFile(string fileName);
