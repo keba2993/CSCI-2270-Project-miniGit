@@ -159,13 +159,70 @@ void miniGit::addFile(string fileName)
 // remove file
 void miniGit::removeFile(string fileName)
 {
+    //prompt user for the filename to remove
+    //Scan the SLL of the currentCommit in order to find if the filename already exists
+    //if found delete the node with standard SLL practice
+    //else print error statement
 
 }
 
 // commit changes
 void miniGit::commit()
 {
+    //scan the SLL of the current commitNode
+    /*
+            //the sllSearch will do this for us anyways
+            currFileNode = currComNode->head;
+    
+            while(currFileNode != nullptr)
+            {
+                if(currFileNode->fileVersion != myFileVersion)
+                {
+                    currFileNode = currFileNode->next;
+                }
+            }
 
+
+        if(SLLSearch == false)
+        {
+            //the file was not found
+            //call addFile because there is no previous version of this file in the currentCommit
+            addFile(myFileVersion);
+        }
+        else
+        {
+            //the file was found in the current Commit we need to line by line compare to see if there were changes made to the matching file in the commit
+            fstream fileInCommit("nameOfFile"), fileToCommit("myFile");
+            //getline loop to check for difference
+            bool same = true;
+            while(same)
+            {
+                while(getline(fileInCommit, lineInCommit))
+                {
+                    while(getline(fileToCommit, lineToCommit))
+                    {
+                        if(lineInCommit == lineToCommit)
+                        {
+                            //the lines are matching so far
+                            //change both lineInCommit and lineToCommit to be the respective next lines in files
+                            
+                        }
+                        else
+                        {
+                            //the files are different and we can commit
+                            same = true;
+                            //do the stuff to add it to the commit 
+                            return;
+                        }
+                        break;
+                    }
+                    break;
+
+                }
+            }
+        }
+
+    */
 }
 
 // checkout
