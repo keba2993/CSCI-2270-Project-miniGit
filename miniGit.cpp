@@ -1,5 +1,5 @@
 // CSCI 2270 - Project: miniGit
-// Author: Kevin Barone 
+// Author: Kevin Barone & Brennan Belei
 // Date: 14th April 2021
 
 /* Description:
@@ -9,16 +9,12 @@
 
 using namespace std;
 
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+
 miniGit::miniGit()  // constructor
 {
-    currentCommit = new commitNode();
-    currentCommit->commitNum = 0;
-    currentCommit->head = nullptr;
-    currentCommit->next = nullptr;
-    currentCommit->previous = nullptr;
-
-    name = "";
-    email = "";
+    fs::create_directory(".miniGit");       // creating directory for miniGit
 }
 miniGit::~miniGit() // destructor
 {
@@ -63,6 +59,24 @@ miniGit::~miniGit() // destructor
         delete tmpCommit;
         tmpCommit = currentCommit;
     }
+
+    fs::remove_all(".miniGit");     // removing all files from the miniGit folder
+}
+
+// initializing the DLL aka the miniGit system
+void miniGit::init(string n, string e)
+{
+    currentCommit = new commitNode();
+    currentCommit->commitNum = 0;
+    currentCommit->head = nullptr;
+    currentCommit->next = nullptr;
+    currentCommit->previous = nullptr;
+
+    // user variables
+    setName(n);
+    setEmail(e);
+
+    cout << name << ", you have successfully initialized your miniGit system with the email: " << email << endl;
 }
 
 // setters for user name and email
@@ -89,11 +103,13 @@ string miniGit::getEmail()
 void displayOptions()
 {
     cout << "Choose an option (number): " << endl
-        << "1. add file" << endl
-        << "2. remove file" << endl
-        << "3. commit changes" << endl
-        << "4. checkout version" << endl
-        << "5. quit" << endl;
+        << "1. initialize system" << endl
+        << "2. add file" << endl
+        << "3. remove file" << endl
+        << "4. commit changes" << endl
+        << "5. checkout version" << endl
+        << "6. quit" << endl
+        << "/-> ";
 }
 
 // helper function to form version fileName when adding a file
@@ -110,18 +126,26 @@ string makeVersion(string fileName, int vNum)
         }
     }
 
-    return fileName.substr(0, dotIndex) + "_0" + to_string(vNum) + fileName.substr(dotIndex);
+    return fileName.substr(0, dotIndex) + "__" + to_string(vNum) + fileName.substr(dotIndex);
 }
 
 // add file
 void miniGit::addFile(string fileName)
 {
+    // make sure the system is initialized
+    if (currentCommit == nullptr)
+    {
+        cerr << "ERROR: miniGit system not initialized - please complete init" << endl;
+        return;
+    }
+
+    // open file
     ifstream addedFile(fileName);
 
     // check if file was already added to this commit
     if (SLLSearch(fileName))
     {
-        cerr << "ERROR: file already added --  cannot add to miniGit" << endl;
+        cerr << "ERROR: File already added --  cannot add to miniGit" << endl;
     }
     // checking that the file can be opened
     else if (!addedFile.is_open())
@@ -131,17 +155,21 @@ void miniGit::addFile(string fileName)
     }
     else
     {
+        // creating new file node
         fileNode* addedFile = new fileNode();
         addedFile->fileName = fileName;
         addedFile->versioNum = 0;
         addedFile->next = nullptr;
 
+        // making new version filename
         addedFile->fileVersion = makeVersion(fileName, addedFile->versioNum);
 
+        // if SLL is empty add at head
         if (currentCommit->head == nullptr)
         {
             currentCommit->head = addedFile;
         }
+        // other wise traverse till end of SLL is reached to add
         else
         {
             fileNode* tmp = currentCommit->head;
@@ -154,11 +182,16 @@ void miniGit::addFile(string fileName)
             tmp->next = addedFile;
         }
     }
+
+    cout << "You successfully added file: " << fileName << " to the commit list." << endl;
+
+    addedFile.close();
 }
 
 // remove file
 void miniGit::removeFile(string fileName)
 {
+    // brennan
     //prompt user for the filename to remove
     //Scan the SLL of the currentCommit in order to find if the filename already exists
     //if found delete the node with standard SLL practice
@@ -240,7 +273,7 @@ commitNode* miniGit::getCurrent()
 // traverse doubleLL
 commitNode* miniGit::DLLSearch(int number)
 {
-
+    // brennan
 }
 
 // search singleLL
