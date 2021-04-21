@@ -9,7 +9,7 @@
 
 int main()
 {
-    miniGit* git;
+    miniGit* git = new miniGit();
     int numIn = 0;
     string input = "";
     string input2 = "";
@@ -22,12 +22,13 @@ int main()
         getline(cin, input);
 
         // checking that the input is a single number
-        if (input[0] > 39 || input[0] < 30 || input.length() > 1)
+        if (input.length() > 1 || !isdigit(input[0]))
         {
-            cerr << "ERROR: Invalid input -- enter a single digit number please" << endl;
+            cerr << endl << "ERROR: Invalid input -- enter a single digit number please" << endl;
         }
         else
         {
+            cout << endl;
             numIn = stoi(input);
 
             // switch statement to perform proper function based on user's choice
@@ -68,7 +69,10 @@ int main()
             }
         }
 
-    } while (numIn != 4);
+    } while (numIn != 6);
+
+    delete git;
+    git = nullptr;
     
     return 0;
 }

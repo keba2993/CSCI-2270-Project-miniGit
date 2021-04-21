@@ -9,8 +9,8 @@
 
 using namespace std;
 
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
+#include <filesystem>              // this is not working and IDK why?
+namespace fs = std::filesystem;
 
 miniGit::miniGit()  // constructor
 {
@@ -76,7 +76,7 @@ void miniGit::init(string n, string e)
     setName(n);
     setEmail(e);
 
-    cout << name << ", you have successfully initialized your miniGit system with the email: " << email << endl;
+    cout << endl << name << ", you have successfully initialized your miniGit system with the email: " << email << endl;
 }
 
 // setters for user name and email
@@ -100,16 +100,16 @@ string miniGit::getEmail()
 }
 
 // display the menu options
-void displayOptions()
+void miniGit::displayOptions()
 {
-    cout << "Choose an option (number): " << endl
+    cout << endl << "Choose an option (number): " << endl
         << "1. initialize system" << endl
         << "2. add file" << endl
         << "3. remove file" << endl
         << "4. commit changes" << endl
         << "5. checkout version" << endl
         << "6. quit" << endl
-        << "/-> ";
+        << ">> ";
 }
 
 // helper function to form version fileName when adding a file
@@ -135,22 +135,23 @@ void miniGit::addFile(string fileName)
     // make sure the system is initialized
     if (currentCommit == nullptr)
     {
-        cerr << "ERROR: miniGit system not initialized - please complete init" << endl;
+        cerr << endl << "ERROR: miniGit system not initialized - please complete init" << endl;
         return;
     }
 
     // open file
     ifstream addedFile(fileName);
 
-    // check if file was already added to this commit
-    if (SLLSearch(fileName))
-    {
-        cerr << "ERROR: File already added --  cannot add to miniGit" << endl;
-    }
     // checking that the file can be opened
-    else if (!addedFile.is_open())
+    if (!addedFile.is_open())
     {
-        cerr << "ERROR: Invalid file name -- cannot add to miniGit" << endl;
+        cerr << endl << "ERROR: Invalid file name -- cannot add to miniGit" << endl;
+        return;
+    }
+    // check if file was already added to this commit
+    else if (SLLSearch(fileName))
+    {
+        cerr << endl << "ERROR: File already added --  cannot add to miniGit" << endl;
         return;
     }
     else
@@ -183,7 +184,7 @@ void miniGit::addFile(string fileName)
         }
     }
 
-    cout << "You successfully added file: " << fileName << " to the commit list." << endl;
+    cout << endl << "You successfully added file: " << fileName << " to the commit list." << endl;
 
     addedFile.close();
 }
@@ -267,17 +268,29 @@ void miniGit::checkout()
 // get current
 commitNode* miniGit::getCurrent()
 {
-
+    return currentCommit;
 }
 
 // traverse doubleLL
 commitNode* miniGit::DLLSearch(int number)
 {
     // brennan
+    return nullptr;
 }
 
 // search singleLL
 bool miniGit::SLLSearch(string file)
 {
-    // search for file and check that version num is updated or not
+    // search for file
+    fileNode* tmp = currentCommit->head;
+
+    while (tmp != nullptr)
+    {
+        if (tmp->fileName == file)
+        {
+            return true;        // file was found
+        }
+    }
+
+    return false;
 }
