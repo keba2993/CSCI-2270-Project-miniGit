@@ -3,6 +3,12 @@
 // Date: 14th April 2021
 
 /* Description:
+ * This is the header file for the miniGit system. The fileNode sturct is used for 
+ * the SLL nodes which hold and keep track of the files on the commit list. The
+ * commitNode struct is used to keep track of all the commits the user performs and
+ * makes up the DLL. The main class contains a data member that points to the current 
+ * commit the user is viewing, and contains all necessary functions (add, remove, 
+ * commit, checkout, etc.) to mimic a git version control system.
 */
 
 #ifndef MINIGIT_H
@@ -17,6 +23,7 @@
 
 using namespace std;
 
+// struct for file nodes in SLL
 struct fileNode
 {
     string fileName;
@@ -25,6 +32,7 @@ struct fileNode
     fileNode* next;
 };
 
+// struct for commit nodes in DLL
 struct commitNode
 {
     int commitNum;
@@ -37,8 +45,8 @@ struct commitNode
 class miniGit
 {
     public:
-        miniGit();
-        ~miniGit();
+        miniGit();  // constructor
+        ~miniGit(); // destructor
 
         void init(string n, string e);    // initialize DLL
 
@@ -48,6 +56,9 @@ class miniGit
 
         string getName();
         string getEmail();
+
+        // get current
+        commitNode* getCurrent();
 
         // display the menu options
         void displayOptions();
@@ -67,16 +78,17 @@ class miniGit
         // checkout 
         void checkout();
 
-        // get current
-        commitNode* getCurrent();
-
         // traverse doubleLL
         commitNode* DLLSearch(int number);
 
         // search singleLL
         bool SLLSearch(string file);
 
+        // copy file
         void readWrite(string readFrom, string writeTo);
+
+        // check equality
+        bool isEqual(string read, string write);
 
     private:
         commitNode* currentCommit;

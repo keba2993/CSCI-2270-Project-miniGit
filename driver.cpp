@@ -45,14 +45,17 @@ int main()
 
                     git->init(input, input2);        // initializing git system
                     break;
-                case 2: // add a files
-                    cout << "Enter the filename: " << endl;
+                case 2: // add a file
+                    cout << "Enter the filename to be added: " << endl;
                     getline(cin, input);
 
                     git->addFile(input);
                     break;
                 case 3: // remove a file
-                    git->removeFile("");
+                    cout << "Enter the filename to be removed: " << endl;
+                    getline(cin, input);
+
+                    git->removeFile(input);
                     break;
                 case 4: // commit changes
                     git->commit();

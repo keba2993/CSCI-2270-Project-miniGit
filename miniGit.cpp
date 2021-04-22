@@ -3,13 +3,18 @@
 // Date: 14th April 2021
 
 /* Description:
+ * This is the implementation of the miniGit class functions. The addFile function adds a fileNode to the 
+ * current commit's SLL, removeFile is used to remove a file form the commit list, commit performs 
+ * the commit changes functionality of the git system, and checkout allows the user to view a previous
+ * version of their files. Helper functions like makeVersion, readWrite, and isEqual are used to streamline
+ * the implementation of more complicated functions.
 */
 
 #include "miniGit.hpp"
 
 using namespace std;
 
-#include <filesystem>              // this is not working and IDK why?
+#include <filesystem>             
 namespace fs = std::filesystem;
 
 miniGit::miniGit()  // constructor
@@ -99,6 +104,12 @@ string miniGit::getEmail()
     return email;
 }
 
+// get current
+commitNode* miniGit::getCurrent()
+{
+    return currentCommit;
+}
+
 // display the menu options
 void miniGit::displayOptions()
 {
@@ -110,6 +121,12 @@ void miniGit::displayOptions()
         << "5. checkout version" << endl
         << "6. quit" << endl
         << ">> ";
+}
+
+// this will print out the full DLL and SLL data structure
+void miniGit::printGit()
+{
+    // Kevin will implement
 }
 
 // helper function to form version fileName when adding a file
@@ -129,7 +146,7 @@ string makeVersion(string fileName, int vNum)
     return fileName.substr(0, dotIndex) + "__" + to_string(vNum) + fileName.substr(dotIndex);
 }
 
-// add file
+// add file to commit list
 void miniGit::addFile(string fileName)
 {
     // make sure the system is initialized
@@ -189,44 +206,61 @@ void miniGit::addFile(string fileName)
     addedFile.close();
 }
 
-// remove file
+// remove file from commit list
 void miniGit::removeFile(string fileName)
 {
-    // brennan
-    //prompt user for the filename to remove
-    //Scan the SLL of the currentCommit in order to find if the filename already exists
-    //if found delete the node with standard SLL practice
-    //else print error statement
-    string justName = "";
+    // prompt user for the filename to remove
+    // Scan the SLL of the currentCommit in order to find if the filename already exists
+    // if found delete the node with standard SLL practice
+    // else print error statement
+
+    // make sure the system is initialized
+    if (currentCommit == nullptr)
+    {
+        cerr << endl << "ERROR: miniGit system not initialized - please complete init" << endl;
+        return;
+    }
+
+    // checking for empty commit list
+    if (currentCommit->head == nullptr)
+    {
+        cerr << endl << "ERROR: Cannot remove file - no files have been added to commit list" << endl;
+        return;
+    }
+    // string justName = "";
     fileNode * currFile = currentCommit->head;
     fileNode * nextFile = currentCommit->head;
-    while(nextFile != nullptr)
+
+    while (nextFile != nullptr)
     {
-        for(int i = 0; i < nextFile->fileName.length(); i++)
+        // for (int i = 0; i < nextFile->fileName.length(); i++)
+        // {
+        //     if(nextFile->fileName[i] == '.')
+        //     {
+        //         justName = nextFile->fileName.substr(0, i);
+        //     }
+        // }
+
+        if (nextFile->fileName == fileName)
         {
-            if(nextFile->fileName[i] == '.')
-            {
-                justName = nextFile->fileName.substr(0, i);
-            }
-        }
-        if(justName == fileName)
-        {
-            //the file has been successfully located
-            //check first to see if it is at the very back of the SLL
-            if(nextFile->next == nullptr)
+            // the file has been successfully located
+            cout << endl << "File: " << fileName << " was successfully deleted." << endl;
+
+            // check first to see if it is at the very back of the SLL
+            if (nextFile->next == nullptr)
             {
                 delete nextFile;
                 currFile->next = nullptr;
                 return;
             }
-            //special case for it the head is to be deleted
-            else if(nextFile == currentCommit->head)
+            // special case for if the head is to be deleted
+            else if (nextFile == currentCommit->head)
             {
                 currentCommit->head = nextFile->next;
                 delete nextFile;
                 return;
             }
-            //now we can assume that its somewhere in the middle
+            // now we can assume that its somewhere in the middle
             else
             {
                 currFile->next = nextFile->next;
@@ -236,16 +270,16 @@ void miniGit::removeFile(string fileName)
         }
         else
         {
-            //we havent found it yet so increment our pointers
-            currFile = currFile->next;
+            // we haven't found it yet so increment our pointers
+            currFile = nextFile;
             nextFile = nextFile->next;
         }
         
     }
-    //here we can assume that the user has entered an invalid name
-    cout << "please enter an existing file to delete" << endl;
-    return;
 
+    // here we can assume that the user has entered an invalid name
+    cerr << endl << "ERROR: Please enter an existing file name to remove" << endl;
+    return;
 }
 
 // commit changes
@@ -313,12 +347,6 @@ void miniGit::checkout()
 
 }
 
-// get current
-commitNode* miniGit::getCurrent()
-{
-    return currentCommit;
-}
-
 // traverse doubleLL
 commitNode* miniGit::DLLSearch(int number)
 {
@@ -326,11 +354,12 @@ commitNode* miniGit::DLLSearch(int number)
     // while previous or while next != null
     // if numbers match return this node
     // if while loop exits return null
-    if(number > currentCommit->commitNum)
+
+    if (number > currentCommit->commitNum)
     {
-        while(currentCommit != nullptr)
+        while (currentCommit != nullptr)
         {
-            if(number == currentCommit->commitNum)
+            if (number == currentCommit->commitNum)
             {
                 return currentCommit;
             }
@@ -340,15 +369,16 @@ commitNode* miniGit::DLLSearch(int number)
             }
         
         }
-        //if we reach here and the function has not returned then we know that the number is invalid
-        cout << "please enter a valid commit number" << endl;
+
+        // if we reach here and the function has not returned then we know that the number is invalid
+        cerr << endl << "ERROR: Invalid commit number - please enter a valid commit number" << endl;
         return nullptr;
     }
     else if(number < currentCommit->commitNum)
     {
-        while(currentCommit != nullptr)
+        while (currentCommit != nullptr)
         {
-            if(number == currentCommit->commitNum)
+            if (number == currentCommit->commitNum)
             {
                 return currentCommit;
             }
@@ -357,18 +387,22 @@ commitNode* miniGit::DLLSearch(int number)
                 currentCommit = currentCommit->next;
             }
         }
-        cout << "please enter a valid commit number" << endl;
+
+        // if we reach here and the function has not returned then we know that the number is invalid
+        cerr << endl << "ERROR: Invalid commit number - please enter a valid commit number" << endl;
+        return nullptr;
     }
     else
     {
-        //at this point we assume that we are already on the requested commit
-        cout << "you are already on this commit" << endl;
+        // at this point we assume that we are already on the requested commit
+        cout << endl << "You are already on this commit" << endl;
         return currentCommit;
     }
-    
+
+    return nullptr;     // don't think ths will ever be reached
 }
 
-// search singleLL
+// search singleLL - used to see if a file already was added to commit list
 bool miniGit::SLLSearch(string file)
 {
     // search for file
@@ -385,9 +419,94 @@ bool miniGit::SLLSearch(string file)
     return false;
 }
 
+// copying file contents to another file
 void miniGit::readWrite(string readFrom, string writeTo)
 {
-    //this function will streamline the process of commiting and checking out files as both functions rely on 
-    //reading and writing to different files just in different orders
+    // this function will streamline the process of commiting and checking out files as both functions rely on 
+    // reading and writing to different files just in different orders
+
+    ifstream readFile(readFrom);
+    ofstream writeFile(writeTo);
+
+    char letterRead, letterWrite;
+
+    // checking if readFile can be opened
+    if (!readFile.is_open())
+    {
+        cerr << endl << "ERROR: Invalid file for input" << endl;
+        return;
+    }
+    // checking if writeFile can be opened
+    if (!writeFile.is_open())
+    {
+        cerr << endl << "ERROR: Invalid file for output" << endl;
+        return;
+    }
+    else
+    {
+        // loop through the characters of the readFile
+        while (true)
+        {
+            letterRead = readFile.get();
+
+            // check if the end of the file is reached
+            if (letterRead == EOF)
+            {
+                break;
+            } 
+
+            writeFile << letterRead;    // write each character individually to writeFile
+        }
+    }
+
+    writeFile.close();
+    readFile.close();    
+}
+
+// being used to compare two files to see if their contents are equal
+bool miniGit::isEqual(string readFrom, string writeTo)
+{
+    ifstream readFile(readFrom);
+    ifstream writeFile(writeTo);
+
+    char letterRead, letterWrite;
+
+    // checking if the files can be opened
+    if (!readFile.is_open() || !writeFile.is_open())
+    {
+        cerr << endl << "ERROR: At least one invalid file for comparison" << endl;
+        return false;
+    }
+    else
+    {
+        // loop through each character of the files
+        while (true)
+        {
+            letterRead = readFile.get();
+            letterWrite = writeFile.get();
+
+            // return false if the current letters do not match
+            if (letterRead != letterWrite) 
+            {
+                return false;
+            }
+
+            // return true if both files reach the end at the same time
+            if (letterRead == EOF && letterWrite == EOF)
+            {
+                return true;
+            }
+            // return false if one file reaches the end before the other
+            else if (letterWrite == EOF || letterRead == EOF)
+            {
+                return false;
+            }
+        }
+    }
     
+    writeFile.close();
+    readFile.close();
+
+    // return true otherwise
+    return true;
 }
