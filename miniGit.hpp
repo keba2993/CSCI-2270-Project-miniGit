@@ -75,6 +75,8 @@ class miniGit
         // search singleLL
         bool SLLSearch(string file);
 
+        void readWrite(string readFrom, string writeTo);
+
     private:
         commitNode* currentCommit;
         string name;

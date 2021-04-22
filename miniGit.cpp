@@ -163,6 +163,54 @@ void miniGit::removeFile(string fileName)
     //Scan the SLL of the currentCommit in order to find if the filename already exists
     //if found delete the node with standard SLL practice
     //else print error statement
+    string justName = "";
+    fileNode * currFile = currentCommit->head;
+    fileNode * nextFile = currentCommit->head;
+    while(nextFile != nullptr)
+    {
+        for(int i = 0; i < nextFile->fileName.length(); i++)
+        {
+            if(nextFile->fileName[i] == '.')
+            {
+                justName = nextFile->fileName.substr(0, i);
+            }
+        }
+        if(justName == fileName)
+        {
+            //the file has been successfully located
+            //check first to see if it is at the very back of the SLL
+            if(nextFile->next == nullptr)
+            {
+                delete nextFile;
+                currFile->next = nullptr;
+                return;
+            }
+            //special case for it the head is to be deleted
+            else if(nextFile == currentCommit->head)
+            {
+                currentCommit->head = nextFile->next;
+                delete nextFile;
+                return;
+            }
+            //now we can assume that its somewhere in the middle
+            else
+            {
+                currFile->next = nextFile->next;
+                delete nextFile;
+                return;
+            }
+        }
+        else
+        {
+            //we havent found it yet so increment our pointers
+            currFile = currFile->next;
+            nextFile = nextFile->next;
+        }
+        
+    }
+    //here we can assume that the user has entered an invalid name
+    cout << "please enter an existing file to delete" << endl;
+    return;
 
 }
 
@@ -240,11 +288,61 @@ commitNode* miniGit::getCurrent()
 // traverse doubleLL
 commitNode* miniGit::DLLSearch(int number)
 {
-
+    // if greater or less than current commint num
+    // while previous or while next != null
+    // if numbers match return this node
+    // if while loop exits return null
+    if(number > currentCommit->commitNum)
+    {
+        while(currentCommit != nullptr)
+        {
+            if(number == currentCommit->commitNum)
+            {
+                return currentCommit;
+            }
+            else
+            {
+                currentCommit = currentCommit->next;
+            }
+        
+        }
+        //if we reach here and the function has not returned then we know that the number is invalid
+        cout << "please enter a valid commit number" << endl;
+        return nullptr;
+    }
+    else if(number < currentCommit->commitNum)
+    {
+        while(currentCommit != nullptr)
+        {
+            if(number == currentCommit->commitNum)
+            {
+                return currentCommit;
+            }
+            else
+            {
+                currentCommit = currentCommit->next;
+            }
+        }
+        cout << "please enter a valid commit number" << endl;
+    }
+    else
+    {
+        //at this point we assume that we are already on the requested commit
+        cout << "you are already on this commit" << endl;
+        return currentCommit;
+    }
+    
 }
 
 // search singleLL
 bool miniGit::SLLSearch(string file)
 {
     // search for file and check that version num is updated or not
+}
+
+void miniGit::readWrite(string readFrom, string writeTo)
+{
+    //this function will streamline the process of commiting and checking out files as both functions rely on 
+    //reading and writing to different files just in different orders
+    
 }
