@@ -1,5 +1,5 @@
 // CSCI 2270 - Project: miniGit
-// Author: Kevin Barone 
+// Author: Kevin Barone & Brennan Belei
 // Date: 14th April 2021
 
 /* Description:
@@ -13,6 +13,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <vector>
 
 using namespace std;
 
@@ -39,7 +40,7 @@ class miniGit
         miniGit();
         ~miniGit();
 
-        void init();    // dont really know what this is gonna be yet
+        void init(string n, string e);    // initialize DLL
 
         // getters and setters for name and email
         void setName(string n);
