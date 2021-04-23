@@ -3,13 +3,17 @@
 // Date: 14th April 2021
 
 /* Description:
+ * This is the driver file for the miniGit system. It contains the declaration of a miniGit object pointer
+ * and other necessary variables that are used to allow the user to choose and perform the different
+ * git actions. A simple do-while is used to keep the program running until the user chooses
+ * to quit it and reset the miniGit system.
 */
 
 #include "miniGit.hpp"
 
 int main()
 {
-    miniGit* git = new miniGit();
+    miniGit* git = new miniGit();;
     int numIn = 0;
     string input = "";
     string input2 = "";

@@ -23,8 +23,14 @@ miniGit::miniGit()  // constructor
 }
 miniGit::~miniGit() // destructor
 {
-    commitNode* hold = currentCommit->next;
+    commitNode* hold = currentCommit;
     commitNode* tmpCommit = currentCommit;
+
+    // resolving test case where there are no nodes initialized yet
+    if (currentCommit != nullptr)
+    {
+        hold = currentCommit->next;
+    }
 
     // deleting all nodes that come before the currentCommit node
     while (currentCommit != nullptr)
@@ -127,6 +133,28 @@ void miniGit::displayOptions()
 void miniGit::printGit()
 {
     // Kevin will implement
+    commitNode* comCrawl = currentCommit;
+    fileNode* fileCrawl = currentCommit->head;
+
+    while (comCrawl != nullptr)
+    {
+        cout << "Commit: " << comCrawl->commitNum << " --> ";
+
+        while (fileCrawl != nullptr)
+        {
+            cout << fileCrawl->fileName << " (" << fileCrawl->versioNum << ") ";
+
+            if (fileCrawl->next != nullptr)
+            {
+                cout << "--> ";
+            }
+
+            fileCrawl = fileCrawl->next;
+        }
+
+        comCrawl = comCrawl->previous;
+        fileCrawl = comCrawl->head;
+    }
 }
 
 // helper function to form version fileName when adding a file
@@ -207,6 +235,7 @@ void miniGit::addFile(string fileName)
 }
 
 // remove file from commit list
+// ************************************* GETTING ERROR: double free detected ****************************
 void miniGit::removeFile(string fileName)
 {
     // prompt user for the filename to remove
@@ -251,6 +280,7 @@ void miniGit::removeFile(string fileName)
             {
                 delete nextFile;
                 currFile->next = nullptr;
+                nextFile = nullptr;
                 return;
             }
             // special case for if the head is to be deleted
@@ -258,6 +288,7 @@ void miniGit::removeFile(string fileName)
             {
                 currentCommit->head = nextFile->next;
                 delete nextFile;
+                nextFile = nullptr;
                 return;
             }
             // now we can assume that its somewhere in the middle
@@ -265,6 +296,7 @@ void miniGit::removeFile(string fileName)
             {
                 currFile->next = nextFile->next;
                 delete nextFile;
+                nextFile = nullptr;
                 return;
             }
         }

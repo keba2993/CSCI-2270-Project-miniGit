@@ -1,3 +1,10 @@
-first file to be committed
+// CSCI 2270 - Project: miniGit
+// Author: Kevin Barone & Brennan Belei
+// Date: 20th April 2021
 
-changing this file
+
+What the project is....
+
+Functionality....
+
+Additional Comments....
