@@ -65,7 +65,7 @@ class miniGit
         void commit();
 
         // checkout 
-        void checkout();
+        void checkout(int commitNum);
 
         // get current
         commitNode* getCurrent();

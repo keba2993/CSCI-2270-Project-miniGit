@@ -251,66 +251,97 @@ void miniGit::removeFile(string fileName)
 // commit changes
 void miniGit::commit()
 {
-    //scan the SLL of the current commitNode
+    //scan the SLL of the current commitNode 
     /*
-            //the sllSearch will do this for us anyways
-            currFileNode = currComNode->head;
-    
-            while(currFileNode != nullptr)
-            {
-                if(currFileNode->fileVersion != myFileVersion)
-                {
-                    currFileNode = currFileNode->next;
-                }
-            }
+    //string called newFileName has no version number attached
+    //we need to first check if some version of the newFileName already exists in the LL
+    //use the SLLSearch function
+    bool result = SLLSearch(newFileName)
+    if(result == false) we know that there are no previous versions of the file
+    {
+        add(newFileName);
+        //since there are no previous version of the file we need to add it to the SLL
+        makeVersion(newFileName, 0);
+    }
+    else
+    {
+        //for each file in the directory we need to loop thru the SLL and find its matching filenode
+        //then we need to compare it to see it has been changed using isEqual
+        fileNode * crawler = currentCommit->head ;
+        //found this from stack overflow, seems like a way to iterate through the files in a directory
+        //I think that this will be useful because we should make a list of the 
+        //files in the directory so that we can search for each of them in the SLL
+        string path = "/";
 
+        string fileList[99] = {}; //could make this a vector
+        int i = 0;
+        for(const auto & file : directory_iterator(path))
+        {
+            fileList[i] = file.path();
+            i++;
+        } 
+        for(int j = 0; j < 99; j++) //not entirely sure how to access the files from the current directory
+        {
+            string fileToCommit = fileList[j];
 
-        if(SLLSearch == false)
-        {
-            //the file was not found
-            //call addFile because there is no previous version of this file in the currentCommit
-            addFile(myFileVersion);
-        }
-        else
-        {
-            //the file was found in the current Commit we need to line by line compare to see if there were changes made to the matching file in the commit
-            fstream fileInCommit("nameOfFile"), fileToCommit("myFile");
-            //getline loop to check for difference
-            bool same = true;
-            while(same)
+            while(crawler != nullptr)
             {
-                while(getline(fileInCommit, lineInCommit))
+                if(fileToCommit == crawler->fileName)
                 {
-                    while(getline(fileToCommit, lineToCommit))
+                    //we have found the corresponding file  and now need to compare it
+                    if(isEqual(fileToCommit, crawler->fileName))
                     {
-                        if(lineInCommit == lineToCommit)
-                        {
-                            //the lines are matching so far
-                            //change both lineInCommit and lineToCommit to be the respective next lines in files
-                            
-                        }
-                        else
-                        {
-                            //the files are different and we can commit
-                            same = true;
-                            //do the stuff to add it to the commit 
-                            return;
-                        }
-                        break;
+                        //the files are equal and there is no need to readWrite
                     }
-                    break;
-
+                    else
+                    {
+                        
+                        readWrite(fileToCommit, crawler->fileName)
+                        makeVersion(fileToCommit, crawler->versionNum)
+                    }
+                }
+                else
+                {
+                    crawler = crawler->next;
                 }
             }
         }
+    }
+    
 
     */
 }
 
 // checkout
-void miniGit::checkout()
+void miniGit::checkout(int commitNum)
 {
+    /* 
+        //Get the list of files in the currentDirectory ready so we know what we are working with
+        string listOfFiles[99] = {};
+        int i = 0;
+        for(const auto & file : directory_iterator(path))
+        {
+            listOfFiles[i] = file.path();
+            i++;
+        } 
+        //do a DLL search in order to find the commitNum that we want
+        commitNode * targetCommit = DLLSearch(commitNum);
+        //for each of the files in the SLL of the targetCommit readWrite it over to the corresponding file in the directory
+        crawler * fileNode = targetCommit->head;
+        while(crawler != nullptr)
+        {
+            for(int k = 0; k < listOfFiles.size(); k++)
+            {
+                if(listOfFiles[k] == crawler->fileName)
+                {
+                    readWrite(crawler->fileName, listOfFiles[k]);
+                }
+            }
+            crawler = crawler->next;
+        }
 
+    */
+    
 }
 
 // get current
@@ -391,3 +422,59 @@ void miniGit::readWrite(string readFrom, string writeTo)
     //reading and writing to different files just in different orders
     
 }
+
+
+
+/*
+            //the sllSearch will do this for us anyways
+            currFileNode = currComNode->head;
+    
+            while(currFileNode != nullptr)
+            {
+                if(currFileNode->fileVersion != myFileVersion)
+                {
+                    currFileNode = currFileNode->next;
+                }
+            }
+
+
+        if(SLLSearch == false)
+        {
+            //the file was not found
+            //call addFile because there is no previous version of this file in the currentCommit
+            addFile(myFileVersion);
+        }
+        else
+        {
+            //the file was found in the current Commit we need to line by line compare to see if there were changes made to the matching file in the commit
+            fstream fileInCommit("nameOfFile"), fileToCommit("myFile");
+            //getline loop to check for difference
+            bool same = true;
+            while(same)
+            {
+                while(getline(fileInCommit, lineInCommit))
+                {
+                    while(getline(fileToCommit, lineToCommit))
+                    {
+                        if(lineInCommit == lineToCommit)
+                        {
+                            //the lines are matching so far
+                            //change both lineInCommit and lineToCommit to be the respective next lines in files
+                            
+                        }
+                        else
+                        {
+                            //the files are different and we can commit
+                            same = true;
+                            //do the stuff to add it to the commit 
+                            return;
+                        }
+                        break;
+                    }
+                    break;
+
+                }
+            }
+        }
+
+    */
