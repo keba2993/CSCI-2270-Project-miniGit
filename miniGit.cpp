@@ -132,18 +132,21 @@ void miniGit::displayOptions()
 // this will print out the full DLL and SLL data structure
 void miniGit::printGit()
 {
-    // Kevin will implement
+    // create crawl pointers for commits and files - DLL and SLL
     commitNode* comCrawl = currentCommit;
     fileNode* fileCrawl = currentCommit->head;
 
+    // loop until empty commit is reached
     while (comCrawl != nullptr)
     {
         cout << "Commit: " << comCrawl->commitNum << " --> ";
 
+        // loop through all files of present commit
         while (fileCrawl != nullptr)
         {
             cout << fileCrawl->fileName << " (" << fileCrawl->versioNum << ") ";
 
+            // checking if there is another file or not
             if (fileCrawl->next != nullptr)
             {
                 cout << "--> ";
@@ -153,7 +156,12 @@ void miniGit::printGit()
         }
 
         comCrawl = comCrawl->previous;
-        fileCrawl = comCrawl->head;
+
+        // only set this if there exists another commit
+        if (comCrawl != nullptr)
+        {
+            fileCrawl = comCrawl->head;
+        }
     }
 }
 
@@ -162,6 +170,7 @@ string makeVersion(string fileName, int vNum)
 {
     int  dotIndex = 0;
 
+    // loop trhough filename until dot is found
     for (int i = 0; i < fileName.length(); ++i)
     {
         if (fileName[i] == '.')
@@ -171,6 +180,7 @@ string makeVersion(string fileName, int vNum)
         }
     }
 
+    // returning version name in format <filename>__<version number>.<file type>
     return fileName.substr(0, dotIndex) + "__" + to_string(vNum) + fileName.substr(dotIndex);
 }
 
@@ -235,7 +245,6 @@ void miniGit::addFile(string fileName)
 }
 
 // remove file from commit list
-// ************************************* GETTING ERROR: double free detected ****************************
 void miniGit::removeFile(string fileName)
 {
     // prompt user for the filename to remove
@@ -257,7 +266,7 @@ void miniGit::removeFile(string fileName)
         return;
     }
     // string justName = "";
-    fileNode * currFile = currentCommit->head;
+    fileNode * currFile = nullptr;
     fileNode * nextFile = currentCommit->head;
 
     while (nextFile != nullptr)
@@ -273,32 +282,32 @@ void miniGit::removeFile(string fileName)
         if (nextFile->fileName == fileName)
         {
             // the file has been successfully located
-            cout << endl << "File: " << fileName << " was successfully deleted." << endl;
 
-            // check first to see if it is at the very back of the SLL
-            if (nextFile->next == nullptr)
-            {
-                delete nextFile;
-                currFile->next = nullptr;
-                nextFile = nullptr;
-                return;
-            }
+            // // check first to see if it is at the very back of the SLL
+            // if (nextFile->next == nullptr)
+            // {
+            //     delete nextFile;
+            //     currFile->next = nullptr;
+            //     nextFile = nullptr;
+            //     return;
+            // }
             // special case for if the head is to be deleted
-            else if (nextFile == currentCommit->head)
+            if (nextFile == currentCommit->head)
             {
                 currentCommit->head = nextFile->next;
                 delete nextFile;
                 nextFile = nullptr;
-                return;
             }
-            // now we can assume that its somewhere in the middle
+            // now we can assume that its somewhere in the middle or at end
             else
             {
                 currFile->next = nextFile->next;
                 delete nextFile;
                 nextFile = nullptr;
-                return;
             }
+
+            cout << endl << "File: " << fileName << " was successfully deleted." << endl;
+            return;
         }
         else
         {

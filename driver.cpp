@@ -54,6 +54,7 @@ int main()
                     getline(cin, input);
 
                     git->addFile(input);
+                    git->printGit();
                     break;
                 case 3: // remove a file
                     cout << "Enter the filename to be removed: " << endl;
@@ -65,7 +66,7 @@ int main()
                     git->commit();
                     break;
                 case 5: // checkout a commit
-                    git->checkout();
+                    git->checkout(3);
                     break;
                 case 6: // quit the program
                     cout << "Thank you for using miniGit!" << endl;
