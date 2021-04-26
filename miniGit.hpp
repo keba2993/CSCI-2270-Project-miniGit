@@ -28,7 +28,7 @@ struct fileNode
 {
     string fileName;
     string fileVersion;
-    int versioNum;
+    int versionNum;
     fileNode* next;
 };
 
