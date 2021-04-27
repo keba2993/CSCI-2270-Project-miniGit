@@ -132,18 +132,29 @@ void miniGit::displayOptions()
 // this will print out the full DLL and SLL data structure
 void miniGit::printGit()
 {
-    // Kevin will implement
+    // do nothing if git is not initialized
+    if (currentCommit == nullptr)
+    {
+        return;
+    }
+
+    cout << endl;
+
+    // create crawl pointers for commits and files - DLL and SLL
     commitNode* comCrawl = currentCommit;
     fileNode* fileCrawl = currentCommit->head;
 
+    // loop until empty commit is reached
     while (comCrawl != nullptr)
     {
         cout << "Commit: " << comCrawl->commitNum << " --> ";
 
+        // loop through all files of present commit
         while (fileCrawl != nullptr)
         {
-            cout << fileCrawl->fileName << " (" << fileCrawl->versioNum << ") ";
+            cout << fileCrawl->fileName << " (" << fileCrawl->versionNum << ") ";
 
+            // checking if there is another file or not
             if (fileCrawl->next != nullptr)
             {
                 cout << "--> ";
@@ -153,7 +164,14 @@ void miniGit::printGit()
         }
 
         comCrawl = comCrawl->previous;
-        fileCrawl = comCrawl->head;
+
+        // only set this if there exists another commit
+        if (comCrawl != nullptr)
+        {
+            fileCrawl = comCrawl->head;
+        }
+
+        cout << endl;
     }
 }
 
@@ -162,6 +180,7 @@ string makeVersion(string fileName, int vNum)
 {
     int  dotIndex = 0;
 
+    // loop trhough filename until dot is found
     for (int i = 0; i < fileName.length(); ++i)
     {
         if (fileName[i] == '.')
@@ -171,6 +190,7 @@ string makeVersion(string fileName, int vNum)
         }
     }
 
+    // returning version name in format <filename>__<version number>.<file type>
     return fileName.substr(0, dotIndex) + "__" + to_string(vNum) + fileName.substr(dotIndex);
 }
 
@@ -204,11 +224,11 @@ void miniGit::addFile(string fileName)
         // creating new file node
         fileNode* addedFile = new fileNode();
         addedFile->fileName = fileName;
-        addedFile->versioNum = 0;
+        addedFile->versionNum = 0;
         addedFile->next = nullptr;
 
         // making new version filename
-        addedFile->fileVersion = makeVersion(fileName, addedFile->versioNum);
+        addedFile->fileVersion = makeVersion(fileName, addedFile->versionNum);
 
         // if SLL is empty add at head
         if (currentCommit->head == nullptr)
@@ -235,7 +255,6 @@ void miniGit::addFile(string fileName)
 }
 
 // remove file from commit list
-// ************************************* GETTING ERROR: double free detected ****************************
 void miniGit::removeFile(string fileName)
 {
     // prompt user for the filename to remove
@@ -256,42 +275,33 @@ void miniGit::removeFile(string fileName)
         cerr << endl << "ERROR: Cannot remove file - no files have been added to commit list" << endl;
         return;
     }
-    // string justName = "";
-    fileNode * currFile = currentCommit->head;
+
+    fileNode * currFile = nullptr;
     fileNode * nextFile = currentCommit->head;
 
     while (nextFile != nullptr)
     {
-
         if (nextFile->fileName == fileName)
         {
             // the file has been successfully located
-            cout << endl << "File: " << fileName << " was successfully deleted." << endl;
 
-            // check first to see if it is at the very back of the SLL
-            // if (nextFile->next == nullptr)
-            // {
-            //     delete nextFile;
-            //     currFile->next = nullptr;
-            //     nextFile = nullptr;
-            //     return;
-            // }
             // special case for if the head is to be deleted
             if (nextFile == currentCommit->head)
             {
                 currentCommit->head = nextFile->next;
                 delete nextFile;
                 nextFile = nullptr;
-                return;
             }
-            // now we can assume that its somewhere in the middle
+            // now we can assume that its somewhere in the middle or at end
             else
             {
                 currFile->next = nextFile->next;
                 delete nextFile;
                 nextFile = nullptr;
-                return;
             }
+
+            cout << endl << "File: " << fileName << " was successfully deleted." << endl;
+            return;
         }
         else
         {
@@ -310,46 +320,123 @@ void miniGit::removeFile(string fileName)
 // commit changes
 void miniGit::commit()
 {
-    //scan the SLL of the current commitNode 
-    /*
-    //string called newFileName has no version number attached
-    //we need to first check if some version of the newFileName already exists in the LL
-    //use the SLLSearch function
+    // scan the SLL of the current commitNode 
+    // string called newFileName has no version number attached
+    // we need to first check if some version of the newFileName already exists in the LL
+    // use the SLLSearch function
 
-        //for each file in the directory we need to loop thru the SLL and find its matching filenode
-        //then we need to compare it to see it has been changed using isEqual
-        //found this from stack overflow, seems like a way to iterate through the files in a directory
-        //I think that this will be useful because we should make a list of the 
-        //files in the directory so that we can search for each of them in the SLL
-    `   fileNode * crawler = currentCommit->head ;
+    // bool result = SLLSearch();
+    // if (result == false) // we know that there are no previous versions of the file
+    // {
+    //     add(newFileName);
+    //     //since there are no previous version of the file we need to add it to the SLL
+    //     makeVersion(newFileName, 0);
+    // }
 
+    // make sure the system is initialized
+    if (currentCommit == nullptr)
+    {
+        cerr << endl << "ERROR: miniGit system not initialized - please complete init" << endl;
+        return;
+    }
 
-            while(crawler != nullptr)
+    // loop to see if any files changed or if new files were added*** 
+
+    // trying to map writing of files to .miniGit
+    // fs::path p = fs::current_path();
+    // fs::rename(p/"from/file1.txt", p/"to/file2.txt");
+
+    // deep copying of previous commit
+    commitNode* newCommit = new commitNode();
+    newCommit->commitNum = currentCommit->commitNum + 1;
+    newCommit->previous = currentCommit;
+    newCommit->next = nullptr;
+    newCommit->head = nullptr;
+
+    currentCommit->next = newCommit;
+
+    fileNode* copyPrev = currentCommit->head;
+    fileNode* prev = nullptr;
+
+    while (copyPrev != nullptr)
+    {
+        fileNode* copyNew = new fileNode();
+        copyNew->versionNum = copyPrev->versionNum;
+        copyNew->fileName = copyPrev->fileName;
+        copyNew->fileVersion = copyPrev->fileVersion;
+        copyNew->next = nullptr;
+
+        if (prev != nullptr)
+        {
+            prev->next = copyNew;
+        }
+
+        prev = copyNew;
+
+        if (copyPrev == currentCommit->head)
+        {
+            newCommit->head = copyNew;
+        }
+
+        copyPrev = copyPrev->next;
+    }
+
+    currentCommit = newCommit;
+
+    // for each file in the directory we need to loop thru the SLL and find its matching filenode
+    // then we need to compare it to see it has been changed using isEqual
+    fileNode* crawler = currentCommit->head;
+
+    // // found this from stack overflow, seems like a way to iterate through the files in a directory
+    // // I think that this will be useful because we should make a list of the
+    // // files in the directory so that we can search for each of them in the SLL
+    // string path = "/";
+
+    // string fileList[99] = {}; //could make this a vector
+    // int i = 0;
+    // for (const auto &file : directory_iterator(path))
+    // {
+    //     fileList[i] = file.path();
+    //     i++;
+    // }
+
+    while (crawler != nullptr)
+    {
+        ifstream versionFile(".minigit/" + crawler->fileVersion);
+
+        // checking if the file has been commited before
+        if (!versionFile.is_open())
+        {
+            readWrite(crawler->fileName, crawler->fileVersion);
+
+            versionFile.close();
+        }
+        // there is a version of the file in the miniGit directory
+        else
+        {
+            versionFile.close();
+            //we have found the corresponding file  and now need to compare it
+            if (isEqual(crawler->fileName, crawler->fileVersion))
             {
-                if(fileToCommit == crawler->fileName)
-                {
-                    //we have found the corresponding file  and now need to compare it
-                    if(isEqual(fileToCommit, crawler->fileName))
-                    {
-                        //the files are equal and there is no need to readWrite
-                    }
-                    else
-                    {
-                        
-                        readWrite(fileToCommit, crawler->fileName)
-                        makeVersion(fileToCommit, crawler->versionNum)
-                    }
-                }
-                else
-                {
-                    crawler = crawler->next;
-                }
+                // do nothing
+                // the files are equal and there is no need to readWrite
+            }
+            else
+            {
+                // making new version name for this file - since edits were made
+                crawler->versionNum++;
+                crawler->fileVersion = makeVersion(crawler->fileName, crawler->versionNum);
+
+                // copying main file contents to new version file
+                readWrite(crawler->fileName, crawler->fileVersion);
+
             }
         }
-    }
-    
 
-    */
+        crawler = crawler->next;
+    }
+
+    cout << "Commit Status: Success" << endl;
 }
 
 // checkout
@@ -492,7 +579,7 @@ void miniGit::readWrite(string readFrom, string writeTo)
     // reading and writing to different files just in different orders
 
     ifstream readFile(readFrom);
-    ofstream writeFile(writeTo);
+    ofstream writeFile("./.minigit/" + writeTo);
 
     char letterRead, letterWrite;
 
@@ -533,7 +620,7 @@ void miniGit::readWrite(string readFrom, string writeTo)
 bool miniGit::isEqual(string readFrom, string writeTo)
 {
     ifstream readFile(readFrom);
-    ifstream writeFile(writeTo);
+    ifstream writeFile("./.minigit/" + writeTo);
 
     char letterRead, letterWrite;
 
