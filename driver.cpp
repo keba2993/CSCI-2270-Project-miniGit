@@ -17,9 +17,10 @@ int main()
 {
     miniGit* git = new miniGit();;
     int numIn = 0;
+    int commitNum = 0;
     string input = "";
     string input2 = "";
-    bool isFile = false;
+    bool isAcceptable = false;
     cout << "Welcome to miniGit" << endl;
 
     // loop to display options while the user does not quit
@@ -64,14 +65,14 @@ int main()
 
                             if (file.is_open())
                             {
-                                isFile = true;
+                                isAcceptable = true;
                             }
                             else
                             {
                                 cerr << endl << "ERROR: Invalid file name -- cannot add to miniGit" << endl;
                             }
 
-                        } while (!isFile);
+                        } while (!isAcceptable);
                     }
 
                     git->addFile(input);
@@ -90,7 +91,28 @@ int main()
                     git->commit();
                     break;
                 case 5: // checkout a commit
-                    git->checkout(3);
+                    if (git->getCurrent() != nullptr)
+                    {
+                        cout << "Enter commit number to checkout: " << endl;
+                        getline(cin, input);
+
+                        // checking that the input is a number
+                        for (int i = 0; i < input.length(); i++)
+                        {
+                            if (!isdigit(input[i]))
+                            {
+                                cerr << endl << "ERROR: Invalid input -- enter a number please" << endl;
+                                isAcceptable = false;
+                            }
+                        }
+
+                        if (isAcceptable)
+                        {
+                            commitNum = stoi(input);
+                        }
+                    }
+
+                    git->checkout(commitNum);
                     break;
                 case 6: // quit the program
                     cout << "Thank you for using miniGit!" << endl;

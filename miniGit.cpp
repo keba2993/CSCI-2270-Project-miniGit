@@ -216,7 +216,7 @@ void miniGit::addFile(string fileName)
     // check if file was already added to this commit
     else if (SLLSearch(fileName))
     {
-        cerr << endl << "ERROR: File already added --  cannot add to miniGit" << endl;
+        cerr << endl << "ERROR: File already added -- cannot add to miniGit" << endl;
         return;
     }
     else
@@ -340,7 +340,40 @@ void miniGit::commit()
         return;
     }
 
-    // loop to see if any files changed or if new files were added*** 
+    // loop to see if any files changed or if new files were added
+    fileNode* findChanges = currentCommit->head;
+    bool isChange = false;
+
+    // looping through all files of current commit
+    while (findChanges != nullptr)
+    {
+        ifstream checkFor(".minigit/" + findChanges->fileVersion);
+
+        // can not open fileVersion file - means there is a new file
+        if (!checkFor.is_open())
+        {
+            isChange = true;
+            break; // exit loop to save on complexity cost
+        }
+
+        checkFor.close();
+
+        // file and fileVersion aren't equal so there is a change to commit
+        if (!isEqual(findChanges->fileName, findChanges->fileVersion))
+        {
+            isChange = true;
+            break;
+        }
+
+        findChanges = findChanges->next;
+    } 
+
+    // if no change is found then do not create new commit node
+    if (!isChange)
+    {
+        cout << "There has been no changes to the added files. Commit was not executed." << endl;
+        return;
+    }
 
     // trying to map writing of files to .miniGit
     // fs::path p = fs::current_path();
@@ -538,6 +571,7 @@ bool miniGit::SLLSearch(string file)
         {
             return true;        // file was found
         }
+        tmp = tmp->next;
     }
 
     return false;
