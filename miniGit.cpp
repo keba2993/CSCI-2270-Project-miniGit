@@ -475,6 +475,7 @@ void miniGit::commit()
 // checkout
 void miniGit::checkout(int commitNum)
 {
+    //take the wanted commit and make the newest commit the desired commit
     /* 
         //Get the list of files in the currentDirectory ready so we know what we are working with
         string listOfFiles[99] = {};
@@ -501,6 +502,34 @@ void miniGit::checkout(int commitNum)
         }
 
     */
+   commitNode * targetCommit = DLLSearch(commitNum);
+   fileNode * fileCrawlerForCheck = new fileNode;
+   fileNode * fileCrawlerCurrCommit = currentCommit->head;
+   if(targetCommit == nullptr)
+   {
+       //valid commitNum has not been entered
+       cout << "please enter a valid commit number" << endl;
+   }
+   else
+   {
+       //a valid commit number has been entered
+        while(fileCrawlerForCheck != nullptr)
+        {
+            while(fileCrawlerCurrCommit != nullptr)
+            {
+                if(fileCrawlerForCheck->fileName == fileCrawlerCurrCommit->fileName)
+                {
+                    readWrite(fileCrawlerForCheck->fileVersion, fileCrawlerCurrCommit->fileName);
+                }
+                else
+                {
+                    fileCrawlerCurrCommit = fileCrawlerCurrCommit->next;
+                }
+            }
+            fileCrawlerForCheck = fileCrawlerForCheck->next;
+        }
+        // fileCrawlerForCheck = fileCrawlerForCheck->next;
+   }
     
 }
 
