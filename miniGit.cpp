@@ -262,13 +262,6 @@ void miniGit::removeFile(string fileName)
 
     while (nextFile != nullptr)
     {
-        // for (int i = 0; i < nextFile->fileName.length(); i++)
-        // {
-        //     if(nextFile->fileName[i] == '.')
-        //     {
-        //         justName = nextFile->fileName.substr(0, i);
-        //     }
-        // }
 
         if (nextFile->fileName == fileName)
         {
@@ -276,15 +269,15 @@ void miniGit::removeFile(string fileName)
             cout << endl << "File: " << fileName << " was successfully deleted." << endl;
 
             // check first to see if it is at the very back of the SLL
-            if (nextFile->next == nullptr)
-            {
-                delete nextFile;
-                currFile->next = nullptr;
-                nextFile = nullptr;
-                return;
-            }
+            // if (nextFile->next == nullptr)
+            // {
+            //     delete nextFile;
+            //     currFile->next = nullptr;
+            //     nextFile = nullptr;
+            //     return;
+            // }
             // special case for if the head is to be deleted
-            else if (nextFile == currentCommit->head)
+            if (nextFile == currentCommit->head)
             {
                 currentCommit->head = nextFile->next;
                 delete nextFile;
@@ -322,33 +315,14 @@ void miniGit::commit()
     //string called newFileName has no version number attached
     //we need to first check if some version of the newFileName already exists in the LL
     //use the SLLSearch function
-    bool result = SLLSearch(newFileName)
-    if(result == false) we know that there are no previous versions of the file
-    {
-        add(newFileName);
-        //since there are no previous version of the file we need to add it to the SLL
-        makeVersion(newFileName, 0);
-    }
-    else
-    {
+
         //for each file in the directory we need to loop thru the SLL and find its matching filenode
         //then we need to compare it to see it has been changed using isEqual
-        fileNode * crawler = currentCommit->head ;
         //found this from stack overflow, seems like a way to iterate through the files in a directory
         //I think that this will be useful because we should make a list of the 
         //files in the directory so that we can search for each of them in the SLL
-        string path = "/";
+    `   fileNode * crawler = currentCommit->head ;
 
-        string fileList[99] = {}; //could make this a vector
-        int i = 0;
-        for(const auto & file : directory_iterator(path))
-        {
-            fileList[i] = file.path();
-            i++;
-        } 
-        for(int j = 0; j < 99; j++) //not entirely sure how to access the files from the current directory
-        {
-            string fileToCommit = fileList[j];
 
             while(crawler != nullptr)
             {
@@ -381,6 +355,7 @@ void miniGit::commit()
 // checkout
 void miniGit::checkout(int commitNum)
 {
+    //take the wanted commit and make the newest commit the desired commit
     /* 
         //Get the list of files in the currentDirectory ready so we know what we are working with
         string listOfFiles[99] = {};
@@ -407,6 +382,34 @@ void miniGit::checkout(int commitNum)
         }
 
     */
+   commitNode * targetCommit = DLLSearch(commitNum);
+   fileNode * fileCrawlerForCheck = new fileNode;
+   fileNode * fileCrawlerCurrCommit = currentCommit->head;
+   if(targetCommit == nullptr)
+   {
+       //valid commitNum has not been entered
+       cout << "please enter a valid commit number" << endl;
+   }
+   else
+   {
+       //a valid commit number has been entered
+        while(fileCrawlerForCheck != nullptr)
+        {
+            while(fileCrawlerCurrCommit != nullptr)
+            {
+                if(fileCrawlerForCheck->fileName == fileCrawlerCurrCommit->fileName)
+                {
+                    readWrite(fileCrawlerForCheck->fileVersion, fileCrawlerCurrCommit->fileName);
+                }
+                else
+                {
+                    fileCrawlerCurrCommit = fileCrawlerCurrCommit->next;
+                }
+            }
+            fileCrawlerForCheck = fileCrawlerForCheck->next;
+        }
+        // fileCrawlerForCheck = fileCrawlerForCheck->next;
+   }
     
 }
 
