@@ -11,12 +11,15 @@
 
 #include "miniGit.hpp"
 
+// Need to update for better user experience //
+
 int main()
 {
     miniGit* git = new miniGit();;
     int numIn = 0;
     string input = "";
     string input2 = "";
+    bool isFile = false;
     cout << "Welcome to miniGit" << endl;
 
     // loop to display options while the user does not quit
@@ -50,15 +53,36 @@ int main()
                     git->init(input, input2);        // initializing git system
                     break;
                 case 2: // add a file
-                    cout << "Enter the filename to be added: " << endl;
-                    getline(cin, input);
+                    if (git->getCurrent() != nullptr)
+                    {
+                        do 
+                        {
+                            cout << "Enter the filename to be added: " << endl;
+                            getline(cin, input);
+
+                            ifstream file(input);
+
+                            if (file.is_open())
+                            {
+                                isFile = true;
+                            }
+                            else
+                            {
+                                cerr << endl << "ERROR: Invalid file name -- cannot add to miniGit" << endl;
+                            }
+
+                        } while (!isFile);
+                    }
 
                     git->addFile(input);
                     git->printGit();
                     break;
                 case 3: // remove a file
-                    cout << "Enter the filename to be removed: " << endl;
-                    getline(cin, input);
+                    if (git->getCurrent() != nullptr)
+                    {
+                        cout << "Enter the filename to be removed: " << endl;
+                        getline(cin, input);
+                    }
 
                     git->removeFile(input);
                     break;

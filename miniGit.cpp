@@ -132,15 +132,17 @@ void miniGit::displayOptions()
 // this will print out the full DLL and SLL data structure
 void miniGit::printGit()
 {
-    // create crawl pointers for commits and files - DLL and SLL
-    commitNode* comCrawl = currentCommit;
-    fileNode* fileCrawl = currentCommit->head;
-
     // do nothing if git is not initialized
     if (currentCommit == nullptr)
     {
         return;
     }
+
+    cout << endl;
+
+    // create crawl pointers for commits and files - DLL and SLL
+    commitNode* comCrawl = currentCommit;
+    fileNode* fileCrawl = currentCommit->head;
 
     // loop until empty commit is reached
     while (comCrawl != nullptr)
@@ -168,6 +170,8 @@ void miniGit::printGit()
         {
             fileCrawl = comCrawl->head;
         }
+
+        cout << endl;
     }
 }
 
@@ -329,6 +333,19 @@ void miniGit::commit()
     //     makeVersion(newFileName, 0);
     // }
 
+    // make sure the system is initialized
+    if (currentCommit == nullptr)
+    {
+        cerr << endl << "ERROR: miniGit system not initialized - please complete init" << endl;
+        return;
+    }
+
+    // loop to see if any files changed or if new files were added*** 
+
+    // trying to map writing of files to .miniGit
+    // fs::path p = fs::current_path();
+    // fs::rename(p/"from/file1.txt", p/"to/file2.txt");
+
     // deep copying of previous commit
     commitNode* newCommit = new commitNode();
     newCommit->commitNum = currentCommit->commitNum + 1;
@@ -385,19 +402,19 @@ void miniGit::commit()
 
     while (crawler != nullptr)
     {
-        ifstream versionFile(crawler->fileVersion);
+        ifstream versionFile(".minigit/" + crawler->fileVersion);
 
         // checking if the file has been commited before
         if (!versionFile.is_open())
         {
             readWrite(crawler->fileName, crawler->fileVersion);
 
-            // figure out how to put into miniGit directory
             versionFile.close();
         }
         // there is a version of the file in the miniGit directory
         else
         {
+            versionFile.close();
             //we have found the corresponding file  and now need to compare it
             if (isEqual(crawler->fileName, crawler->fileVersion))
             {
@@ -413,7 +430,6 @@ void miniGit::commit()
                 // copying main file contents to new version file
                 readWrite(crawler->fileName, crawler->fileVersion);
 
-                // figure out how to place in miniGit directory
             }
         }
 
@@ -534,7 +550,7 @@ void miniGit::readWrite(string readFrom, string writeTo)
     // reading and writing to different files just in different orders
 
     ifstream readFile(readFrom);
-    ofstream writeFile(writeTo);
+    ofstream writeFile("./.minigit/" + writeTo);
 
     char letterRead, letterWrite;
 
@@ -575,7 +591,7 @@ void miniGit::readWrite(string readFrom, string writeTo)
 bool miniGit::isEqual(string readFrom, string writeTo)
 {
     ifstream readFile(readFrom);
-    ifstream writeFile(writeTo);
+    ifstream writeFile("./.minigit/" + writeTo);
 
     char letterRead, letterWrite;
 
