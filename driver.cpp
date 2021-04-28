@@ -43,15 +43,23 @@ int main()
             switch (numIn)
             {
                 case 1: // initialize miniGit
-                    // ask user for their name
-                    cout << "Enter your name: " << endl;
-                    getline(cin, input);
+                    if (git->getCurrent() == nullptr)
+                    {
+                        // ask user for their name
+                        cout << "Enter your name: " << endl;
+                        getline(cin, input);
 
-                    // ask user for their email
-                    cout << "Enter your email: " << endl;
-                    getline(cin, input2);
+                        // ask user for their email
+                        cout << "Enter your email: " << endl;
+                        getline(cin, input2);
 
-                    git->init(input, input2);        // initializing git system
+                        git->init(input, input2);        // initializing git system
+                    }
+                    else
+                    {
+                        cout << "You have already initialized the system." << endl;
+                    }
+                    
                     break;
                 case 2: // add a file
                     if (git->getCurrent() != nullptr)
@@ -70,7 +78,11 @@ int main()
                             else
                             {
                                 cerr << endl << "ERROR: Invalid file name -- cannot add to miniGit" << endl;
+                                isAcceptable = false;
                             }
+                            cout << isAcceptable << endl; 
+
+                            file.close();
 
                         } while (!isAcceptable);
                     }

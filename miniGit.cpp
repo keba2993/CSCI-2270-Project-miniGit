@@ -19,6 +19,7 @@ namespace fs = std::filesystem;
 
 miniGit::miniGit()  // constructor
 {
+    fs::remove_all(".miniGit");     // removing all files from the miniGit folder
     fs::create_directory(".miniGit");       // creating directory for miniGit
 }
 miniGit::~miniGit() // destructor
@@ -219,6 +220,12 @@ void miniGit::addFile(string fileName)
         cerr << endl << "ERROR: File already added -- cannot add to miniGit" << endl;
         return;
     }
+    // check that user is on most recent commit
+    else if (currentCommit->next != nullptr)
+    {
+        cerr << endl << "ERROR: Cannot add file - uncommitted changes from checkout" << endl;
+        return;
+    }
     else
     {
         // creating new file node
@@ -276,6 +283,13 @@ void miniGit::removeFile(string fileName)
         return;
     }
 
+    // check that user is on most recent commit
+    if (currentCommit->next != nullptr)
+    {
+        cerr << endl << "ERROR: Cannot remove file - uncommitted changes from checkout" << endl;
+        return;
+    }
+
     fileNode * currFile = nullptr;
     fileNode * nextFile = currentCommit->head;
 
@@ -325,14 +339,6 @@ void miniGit::commit()
     // we need to first check if some version of the newFileName already exists in the LL
     // use the SLLSearch function
 
-    // bool result = SLLSearch();
-    // if (result == false) // we know that there are no previous versions of the file
-    // {
-    //     add(newFileName);
-    //     //since there are no previous version of the file we need to add it to the SLL
-    //     makeVersion(newFileName, 0);
-    // }
-
     // make sure the system is initialized
     if (currentCommit == nullptr)
     {
@@ -375,9 +381,7 @@ void miniGit::commit()
         return;
     }
 
-    // trying to map writing of files to .miniGit
-    // fs::path p = fs::current_path();
-    // fs::rename(p/"from/file1.txt", p/"to/file2.txt");
+    // commiting from checkout??????
 
     // deep copying of previous commit
     commitNode* newCommit = new commitNode();
@@ -420,19 +424,6 @@ void miniGit::commit()
     // then we need to compare it to see it has been changed using isEqual
     fileNode* crawler = currentCommit->head;
 
-    // // found this from stack overflow, seems like a way to iterate through the files in a directory
-    // // I think that this will be useful because we should make a list of the
-    // // files in the directory so that we can search for each of them in the SLL
-    // string path = "/";
-
-    // string fileList[99] = {}; //could make this a vector
-    // int i = 0;
-    // for (const auto &file : directory_iterator(path))
-    // {
-    //     fileList[i] = file.path();
-    //     i++;
-    // }
-
     while (crawler != nullptr)
     {
         ifstream versionFile(".minigit/" + crawler->fileVersion);
@@ -440,7 +431,7 @@ void miniGit::commit()
         // checking if the file has been commited before
         if (!versionFile.is_open())
         {
-            readWrite(crawler->fileName, crawler->fileVersion);
+            readWrite(crawler->fileName, crawler->fileVersion, false);
 
             versionFile.close();
         }
@@ -461,7 +452,7 @@ void miniGit::commit()
                 crawler->fileVersion = makeVersion(crawler->fileName, crawler->versionNum);
 
                 // copying main file contents to new version file
-                readWrite(crawler->fileName, crawler->fileVersion);
+                readWrite(crawler->fileName, crawler->fileVersion, false);
 
             }
         }
@@ -476,60 +467,40 @@ void miniGit::commit()
 void miniGit::checkout(int commitNum)
 {
     //take the wanted commit and make the newest commit the desired commit
-    /* 
-        //Get the list of files in the currentDirectory ready so we know what we are working with
-        string listOfFiles[99] = {};
-        int i = 0;
-        for(const auto & file : directory_iterator(path))
-        {
-            listOfFiles[i] = file.path();
-            i++;
-        } 
-        //do a DLL search in order to find the commitNum that we want
-        commitNode * targetCommit = DLLSearch(commitNum);
-        //for each of the files in the SLL of the targetCommit readWrite it over to the corresponding file in the directory
-        crawler * fileNode = targetCommit->head;
-        while(crawler != nullptr)
-        {
-            for(int k = 0; k < listOfFiles.size(); k++)
-            {
-                if(listOfFiles[k] == crawler->fileName)
-                {
-                    readWrite(crawler->fileName, listOfFiles[k]);
-                }
-            }
-            crawler = crawler->next;
-        }
+    commitNode * targetCommit = DLLSearch(commitNum);
+    // fileNode * fileCrawlerCurrCommit = currentCommit->head;
 
-    */
-   commitNode * targetCommit = DLLSearch(commitNum);
-   fileNode * fileCrawlerForCheck = new fileNode;
-   fileNode * fileCrawlerCurrCommit = currentCommit->head;
-   if(targetCommit == nullptr)
-   {
-       //valid commitNum has not been entered
-       cout << "please enter a valid commit number" << endl;
-   }
-   else
-   {
-       //a valid commit number has been entered
-        while(fileCrawlerForCheck != nullptr)
+    if (targetCommit == nullptr)
+    {
+        // valid commitNum has not been entered
+        // cout << "please enter a valid commit number" << endl;
+        return;
+    }
+    else
+    {
+        fileNode * fileCrawlerForCheck = targetCommit->head;
+       // a valid commit number has been entered
+        while (fileCrawlerForCheck != nullptr)
         {
-            while(fileCrawlerCurrCommit != nullptr)
-            {
-                if(fileCrawlerForCheck->fileName == fileCrawlerCurrCommit->fileName)
-                {
-                    readWrite(fileCrawlerForCheck->fileVersion, fileCrawlerCurrCommit->fileName);
-                }
-                else
-                {
-                    fileCrawlerCurrCommit = fileCrawlerCurrCommit->next;
-                }
-            }
+            // while (fileCrawlerCurrCommit != nullptr)
+            // {
+                // if (fileCrawlerForCheck->fileName == fileCrawlerCurrCommit->fileName)
+                // {
+                    readWrite (fileCrawlerForCheck->fileVersion, fileCrawlerForCheck->fileName, true);
+                // }
+                // else
+                // {
+                //     fileCrawlerCurrCommit = fileCrawlerCurrCommit->next;
+                // }
+            // }
             fileCrawlerForCheck = fileCrawlerForCheck->next;
         }
         // fileCrawlerForCheck = fileCrawlerForCheck->next;
-   }
+        currentCommit = targetCommit;
+
+        cout << "Checkout on commit number: " << commitNum << " successful." << endl;
+        return;
+    }
     
 }
 
@@ -541,18 +512,18 @@ commitNode* miniGit::DLLSearch(int number)
     // if numbers match return this node
     // if while loop exits return null
 
+    commitNode* crawler = currentCommit;
     if (number > currentCommit->commitNum)
     {
-        while (currentCommit != nullptr)
+        while (crawler != nullptr)
         {
-            if (number == currentCommit->commitNum)
+            cout << crawler->commitNum << endl;
+            if (number == crawler->commitNum)
             {
-                return currentCommit;
+                return crawler;
             }
-            else
-            {
-                currentCommit = currentCommit->next;
-            }
+            
+            crawler = crawler->next;
         
         }
 
@@ -560,18 +531,16 @@ commitNode* miniGit::DLLSearch(int number)
         cerr << endl << "ERROR: Invalid commit number - please enter a valid commit number" << endl;
         return nullptr;
     }
-    else if(number < currentCommit->commitNum)
+    else if (number < currentCommit->commitNum)
     {
-        while (currentCommit != nullptr)
+        while (crawler != nullptr)
         {
-            if (number == currentCommit->commitNum)
+            if (number == crawler->commitNum)
             {
-                return currentCommit;
+                return crawler;
             }
-            else
-            {
-                currentCommit = currentCommit->next;
-            }
+
+            crawler = crawler->previous;
         }
 
         // if we reach here and the function has not returned then we know that the number is invalid
@@ -607,13 +576,24 @@ bool miniGit::SLLSearch(string file)
 }
 
 // copying file contents to another file
-void miniGit::readWrite(string readFrom, string writeTo)
+void miniGit::readWrite(string readFrom, string writeTo, bool isCheck)
 {
     // this function will streamline the process of commiting and checking out files as both functions rely on 
     // reading and writing to different files just in different orders
 
-    ifstream readFile(readFrom);
-    ofstream writeFile("./.minigit/" + writeTo);
+    ifstream readFile;
+    ofstream writeFile;
+
+    if (!isCheck)
+    {
+        readFile.open(readFrom);
+        writeFile.open("./.minigit/" + writeTo);
+    }
+    else
+    {
+        readFile.open(".minigit/" + readFrom);
+        writeFile.open(writeTo);
+    }
 
     char letterRead, letterWrite;
 

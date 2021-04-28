@@ -85,7 +85,7 @@ class miniGit
         bool SLLSearch(string file);
 
         // copy file
-        void readWrite(string readFrom, string writeTo);
+        void readWrite(string readFrom, string writeTo, bool isCheck);
 
         // check equality
         bool isEqual(string read, string write);
