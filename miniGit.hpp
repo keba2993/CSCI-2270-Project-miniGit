@@ -74,6 +74,7 @@ class miniGit
 
         // commit changes
         void commit();
+        void checkCommit();
 
         // checkout 
         void checkout(int commitNum);
@@ -88,10 +89,11 @@ class miniGit
         void readWrite(string readFrom, string writeTo, bool isCheck);
 
         // check equality
-        bool isEqual(string read, string write);
+        bool isEqual(string read, string write, bool afterCO);
 
     private:
         commitNode* currentCommit;
+        commitNode* mostRecent;
         string name;
         string email;
 };
