@@ -30,6 +30,8 @@ struct fileNode
     string fileVersion;
     int versionNum;
     fileNode* next;
+
+    bool removed;
 };
 
 // struct for commit nodes in DLL
@@ -83,7 +85,7 @@ class miniGit
         commitNode* DLLSearch(int number);
 
         // search singleLL
-        bool SLLSearch(string file);
+        fileNode* SLLSearch(string file);
 
         // copy file
         void readWrite(string readFrom, string writeTo, bool isCheck);

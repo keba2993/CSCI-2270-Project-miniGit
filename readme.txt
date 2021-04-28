@@ -14,18 +14,19 @@ they will be prompted with further requirements based on their choice. It is imp
 the user will be unable to perform any option until after they have initialized the system with their 
 name and email. THis must first be completed before the miniGit system is fully ready.
 
-desribe class struct - and filesystem**
     The class miniGit is comprised of a constructor, descructor, the functions listed below, and the
-private data members currentCommit - pointer to current commit node, name - name of user, and 
-email - user's email. The constructor simply creates the .minigit directory in the local directory using
-the filesystem library. The descructor frees all memory associated with the DLL and SLL by visiting 
-the previous nodes from the current commit and deleting each file node in their SLL, and then the next 
-pointer is used to visit the DLL nodes after current commit and delete their SLL nodes. The remove_all
-function of filesystem library is also used to delete all files in the .minigit directory.
+private data members currentCommit - pointer to current commit node, name - name of user, email - 
+user's email, and mostRecent - pointer to the most recent commit made. The constructor simply creates 
+the .minigit directory in the local directory using the filesystem library. The descructor frees all 
+memory associated with the DLL and SLL by visiting the previous nodes from the current commit and 
+deleting each file node in their SLL, and then the next pointer is used to visit the DLL nodes after 
+current commit and delete their SLL nodes. The remove_all function of filesystem library is also used 
+to delete all files in the .minigit directory.
 
     The struct used for the DLL is commitNode which has a commitNum, a head pointer to point to the SLL
 associated wiht the commit, and next and previous pointers to other commit nodes. The struct for the 
-SLL is fileNode which has a fileName, fileVersion - name of version file, versionNum, and a next pointer.
+SLL is fileNode which has a fileName, fileVersion - name of version file, versionNum, removed - whether 
+the node is a part of commit list, and a next pointer.
 
 
 ====== Functionality ======
@@ -53,6 +54,7 @@ HELPER FUNCTIONS:
     - isEqual - returns whether or not two files' contents are exactly the same or not - used in commit
     - readWrite - copies the contents of a given file to a new file to be stored in the .minigit directory
     - printGit - prints the structure of the miniGit system (DLL and SLL) in a nice format - for debugging
+               - decided to use after each action to show user the miniGit "log" for easy understanding
 
 MAIN FUNCTIONS:
     - init - initializes the DLL with an empty commit node with commit num zero - essentially the default
@@ -68,9 +70,8 @@ MAIN FUNCTIONS:
 
     - removeFile - takes in file name and removes the node of that file from the SLL of the current commit
                  - first checks that the system has been initialized and that the file has been added to the list
-                 - a while loop is then used to traverse the SLL until the requested file node is found, it is then 
-                   checked where the node is being removed from, head, middle, or end - each test case is dealt 
-                   with properly as you would with any linked list
+                 - a while loop is then used to traverse the SLL until the requested file node is found, its 'removed'
+                   struct element is then simply set to true to signify that it is no longer a part of the commit list
 
     - commit - it is again first checked if the system has been initialized, if it has, the current commit SLL is 
                is traversed - each file node's fileVersion file is opened
@@ -85,7 +86,21 @@ MAIN FUNCTIONS:
              - if the version file in .minigit exists and is equal to the actual file, then nothing is done for
                this file - otherwise the version num and version file name of the node is updated so that a new 
                version file can be made in the .minigit directory using readWrite again
+    
+    - checkComit - this is essentially the same function as the standard commit however it is slightly altered
+                   to account for committing from a node that is not at the end of the DLL
 
-    - checkout - 
+    - checkout - first checks to see if the system was initialized or not 
+               - then each added file is checked for changes - the checkout does go through if there are unsaved
+                 to the files in the commit list - user is prompted to commit before checking out a previous commit
+               - if checkout proceeds, then the target commit is found using inputted number and the DLLSearch - 
+                 once the commit node is found, each file node is traversed and the files are updated based on the 
+                 file versions associated with the requested commit
+               - user is then only allowed to checkout another commit or commit the checkout commit as the most 
+                 recent commit - adding and removing files is disallowed until the user commits the checkout
 
 Additional Comments....
+
+  As stated above, the nodes of files are not removed upon calling the removeFile function, but rather a bool "removed"
+is used to keep track of the current files on the commit list. This was done to allow for easier checkout opertations 
+that involved reverting to commits where files were removed or added.

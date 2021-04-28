@@ -55,7 +55,7 @@ int main()
 
                         git->init(input, input2);        // initializing git system
                     }
-                    else
+                    else    // system is initialized already
                     {
                         cout << "You have already initialized the system." << endl;
                     }
@@ -64,7 +64,7 @@ int main()
                 case 2: // add a file
                     if (git->getCurrent() != nullptr)
                     {
-                        do 
+                        do  // loop until proper filename is given
                         {
                             cout << "Enter the filename to be added: " << endl;
                             getline(cin, input);
@@ -80,7 +80,6 @@ int main()
                                 cerr << endl << "ERROR: Invalid file name -- cannot add to miniGit" << endl;
                                 isAcceptable = false;
                             }
-                            // cout << isAcceptable << endl; 
 
                             file.close();
 
@@ -91,7 +90,7 @@ int main()
                     git->printGit();
                     break;
                 case 3: // remove a file
-                    if (git->getCurrent() != nullptr)
+                    if (git->getCurrent() != nullptr)   // only print if system is initialized
                     {
                         cout << "Enter the filename to be removed: " << endl;
                         getline(cin, input);
@@ -120,7 +119,7 @@ int main()
                             }
                         }
 
-                        if (isAcceptable)
+                        if (isAcceptable)   // convert to integer
                         {
                             commitNum = stoi(input);
                         }

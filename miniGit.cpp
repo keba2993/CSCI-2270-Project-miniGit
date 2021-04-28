@@ -19,7 +19,7 @@ namespace fs = std::filesystem;
 
 miniGit::miniGit()  // constructor
 {
-    fs::remove_all(".miniGit");     // removing all files from the miniGit folder
+    fs::remove_all(".miniGit");             // removing all files from the miniGit folder
     fs::create_directory(".miniGit");       // creating directory for miniGit
 }
 miniGit::~miniGit() // destructor
@@ -157,6 +157,12 @@ void miniGit::printGit()
         {
             cout << fileCrawl->fileName << " (" << fileCrawl->versionNum << ") ";
 
+            // adding tag to inactive files
+            if (fileCrawl->removed)
+            {
+                cout << "*RMV* ";
+            }
+
             // checking if there is another file or not
             if (fileCrawl->next != nullptr)
             {
@@ -217,9 +223,19 @@ void miniGit::addFile(string fileName)
         return;
     }
     // check if file was already added to this commit
-    else if (SLLSearch(fileName))
+    else if (SLLSearch(fileName) != nullptr)
     {
-        cerr << endl << "ERROR: File already added -- cannot add to miniGit" << endl;
+        // if file is added and active - error
+        if (!SLLSearch(fileName)->removed)
+        {
+            cerr << endl << "ERROR: File already added -- cannot add to miniGit" << endl;
+        }
+        else
+        {   
+            // if inactive make it active
+            SLLSearch(fileName)->removed = false;
+        }
+        
         return;
     }
     // check that user is on most recent commit
@@ -235,6 +251,7 @@ void miniGit::addFile(string fileName)
         addedFile->fileName = fileName;
         addedFile->versionNum = 0;
         addedFile->next = nullptr;
+        addedFile->removed = false;
 
         // making new version filename
         addedFile->fileVersion = makeVersion(fileName, addedFile->versionNum);
@@ -301,20 +318,7 @@ void miniGit::removeFile(string fileName)
         {
             // the file has been successfully located
 
-            // special case for if the head is to be deleted
-            if (nextFile == currentCommit->head)
-            {
-                currentCommit->head = nextFile->next;
-                delete nextFile;
-                nextFile = nullptr;
-            }
-            // now we can assume that its somewhere in the middle or at end
-            else
-            {
-                currFile->next = nextFile->next;
-                delete nextFile;
-                nextFile = nullptr;
-            }
+            nextFile->removed = true;       // setting as inactive
 
             cout << endl << "File: " << fileName << " was successfully deleted." << endl;
             return;
@@ -355,39 +359,52 @@ void miniGit::commit()
         return;
     }
 
-    // loop to see if any files changed or if new files were added
-    fileNode* findChanges = currentCommit->head;
-    bool isChange = false;
-
-    // looping through all files of current commit
-    while (findChanges != nullptr)
+    // only look for changes if most recent commit is not 0
+    if (mostRecent->commitNum != 0)
     {
-        ifstream checkFor(".minigit/" + findChanges->fileVersion);
+        // loop to see if any files changed or if new files were added
+        fileNode* findChanges = currentCommit->head;
+        fileNode* prevCrawl = currentCommit->previous->head;
+        bool isChange = false;
 
-        // can not open fileVersion file - means there is a new file
-        if (!checkFor.is_open())
+        // looping through all files of current commit
+        while (findChanges != nullptr)
         {
-            isChange = true;
-            break; // exit loop to save on complexity cost
-        }
+            ifstream checkFor(".minigit/" + findChanges->fileVersion);
 
-        checkFor.close();
+            // can not open fileVersion file - means there is a new file
+            if (!checkFor.is_open())
+            {
+                isChange = true;
+                break; // exit loop to save on complexity cost
+            }
 
-        // file and fileVersion aren't equal so there is a change to commit
-        if (!isEqual(findChanges->fileName, findChanges->fileVersion, false))
+            checkFor.close();
+
+            // file and fileVersion aren't equal so there is a change to commit
+            if (!isEqual(findChanges->fileName, findChanges->fileVersion, false) && !findChanges->removed)
+            {
+                isChange = true;
+                break;
+            }
+
+            // file was recently removed
+            if (findChanges->removed != prevCrawl->removed)
+            {
+                isChange = true;
+                break;
+            }
+
+            findChanges = findChanges->next;
+            prevCrawl = prevCrawl->next;
+        } 
+
+        // if no change is found then do not create new commit node
+        if (!isChange)
         {
-            isChange = true;
-            break;
+            cout << "There has been no changes to the added files. Commit was not executed." << endl;
+            return;
         }
-
-        findChanges = findChanges->next;
-    } 
-
-    // if no change is found then do not create new commit node
-    if (!isChange)
-    {
-        cout << "There has been no changes to the added files. Commit was not executed." << endl;
-        return;
     }
 
     // deep copying of previous commit
@@ -408,6 +425,7 @@ void miniGit::commit()
         copyNew->versionNum = copyPrev->versionNum;
         copyNew->fileName = copyPrev->fileName;
         copyNew->fileVersion = copyPrev->fileVersion;
+        copyNew->removed = copyPrev->removed;
         copyNew->next = nullptr;
 
         if (prev != nullptr)
@@ -444,24 +462,27 @@ void miniGit::commit()
             versionFile.close();
         }
         // there is a version of the file in the miniGit directory
-        else
+        else 
         {
             versionFile.close();
-            //we have found the corresponding file  and now need to compare it
-            if (isEqual(crawler->fileName, crawler->fileVersion, false))
-            {
-                // do nothing
-                // the files are equal and there is no need to readWrite
-            }
-            else
-            {
-                // making new version name for this file - since edits were made
-                crawler->versionNum++;
-                crawler->fileVersion = makeVersion(crawler->fileName, crawler->versionNum);
 
-                // copying main file contents to new version file
-                readWrite(crawler->fileName, crawler->fileVersion, false);
+            if (!crawler->removed)
+            {
+                //we have found the corresponding file  and now need to compare it
+                if (isEqual(crawler->fileName, crawler->fileVersion, false))
+                {
+                    // do nothing
+                    // the files are equal and there is no need to readWrite
+                }
+                else
+                {
+                    // making new version name for this file - since edits were made
+                    crawler->versionNum++;
+                    crawler->fileVersion = makeVersion(crawler->fileName, crawler->versionNum);
 
+                    // copying main file contents to new version file
+                    readWrite(crawler->fileName, crawler->fileVersion, false);
+                }
             }
         }
 
@@ -488,8 +509,15 @@ void miniGit::checkCommit()
             break;
         }
 
-        // file and fileVersion aren't equal so there is a change to commit**
+        // file and fileVersion aren't equal so there is a change to commit
         if (!isEqual(findChanges->fileVersion, mostRecentCrawler->fileVersion, true))
+        {
+            isChange = true;
+            break;
+        }
+
+        // file was recently removed
+        if (findChanges->removed != mostRecentCrawler->removed)
         {
             isChange = true;
             break;
@@ -518,7 +546,8 @@ void miniGit::checkCommit()
 
     mostRecent->next = newCommit;
 
-    fileNode* copyPrev = currentCommit->head;
+    fileNode* copyPrev = mostRecent->head;          // crawler for most recent commit
+    fileNode* currentCrawl = currentCommit->head;   // crawler for current commit
     fileNode* prev = nullptr;
 
     while (copyPrev != nullptr)
@@ -527,8 +556,10 @@ void miniGit::checkCommit()
         copyNew->versionNum = copyPrev->versionNum;
         copyNew->fileName = copyPrev->fileName;
         copyNew->fileVersion = copyPrev->fileVersion;
+        copyNew->removed = copyPrev->removed;
         copyNew->next = nullptr;
 
+        // setting previous new node next pointer
         if (prev != nullptr)
         {
             prev->next = copyNew;
@@ -536,15 +567,42 @@ void miniGit::checkCommit()
 
         prev = copyNew;
 
-        if (copyPrev == currentCommit->head)
+        // setting head pointer
+        if (copyPrev == mostRecent->head)
         {
             newCommit->head = copyNew;
         }
 
+        // if this file is not in current - then it needs to be removed
+        if (currentCrawl == nullptr)
+        {
+            copyNew->removed = true;
+        }
+        else
+        {   
+            // setting removed property of new file node
+            copyNew->removed = currentCrawl->removed;
+            currentCrawl = currentCrawl->next;
+        }
         copyPrev = copyPrev->next;
     }
 
-    currentCommit = newCommit;
+    fileNode* newCrawl = newCommit->head;   // new commit crawler
+
+    while (currentCrawl != nullptr)
+    {
+        // checking the version numbers and updating them for the current commit
+        if (currentCrawl->versionNum != newCrawl->versionNum)
+        {
+            newCrawl->versionNum = currentCrawl->versionNum;
+            newCrawl->fileVersion = currentCrawl->fileVersion;
+        }
+
+        currentCrawl = currentCrawl->next;
+        newCrawl = newCrawl->next;
+    }
+
+    currentCommit = newCommit;  // moving current commit
 
     // for each file in the directory we need to loop thru the SLL and find its matching filenode
     // then we need to compare it to see it has been changed using isEqual
@@ -553,16 +611,10 @@ void miniGit::checkCommit()
 
     while (crawler != nullptr)
     {
-        //we have found the corresponding file and now need to compare it
-        if (isEqual(crawler->fileName, crawler->fileVersion, false))
+
+        // making new version name for this file - since edits were made - if not removed
+        if (!crawler->removed)
         {
-            // do nothing
-            // the files are equal and there is no need to readWrite
-        }
-        else
-        {
-            // cout << crawler->versionNum << "   " << prevCrawl->versionNum << endl;
-            // making new version name for this file - since edits were made
             crawler->versionNum = prevCrawl->versionNum + 1;
             crawler->fileVersion = makeVersion(crawler->fileName, crawler->versionNum);
 
@@ -581,48 +633,84 @@ void miniGit::checkCommit()
 // checkout
 void miniGit::checkout(int commitNum)
 {
+    // check if the system is initialized
     if (currentCommit == nullptr)
     {
         cerr << endl << "ERROR: miniGit system not initialized - please complete init" << endl;
         return;
     }
-    
+
+    // loop to see if any files changed or if new files were added
+    fileNode *findChanges = currentCommit->head;
+    fileNode *prevCrawl = currentCommit->previous->head;
+    bool isChange = false;
+
+    // looping through all files of current commit
+    while (findChanges != nullptr)
+    {
+        ifstream checkFor(".minigit/" + findChanges->fileVersion);
+
+        // can not open fileVersion file - means there is a new file
+        if (!checkFor.is_open())
+        {
+            isChange = true;
+            break; // exit loop to save on complexity cost
+        }
+
+        checkFor.close();
+
+        // file and fileVersion aren't equal so there is a change to commit
+        if (!isEqual(findChanges->fileName, findChanges->fileVersion, false) && !findChanges->removed)
+        {
+            isChange = true;
+            break;
+        }
+
+        // file was recently removed
+        if (findChanges->removed != prevCrawl->removed)
+        {
+            isChange = true;
+            break;
+        }
+
+        findChanges = findChanges->next;
+        prevCrawl = prevCrawl->next;
+    }
+
+    // if change is found then do not allow user to checkout commit
+    if (isChange)
+    {
+        cout << endl
+             << "There has been changes to the added files. Checkout was not executed."
+             << "Please perform a commit to save most recent file versions." << endl;
+        return;
+    }
+
     //take the wanted commit and make the newest commit the desired commit
     commitNode * targetCommit = DLLSearch(commitNum);
-    // fileNode * fileCrawlerCurrCommit = currentCommit->head;
 
     if (targetCommit == nullptr)
     {
         // valid commitNum has not been entered
-        // cout << "please enter a valid commit number" << endl;
         return;
     }
     else
     {
         fileNode * fileCrawlerForCheck = targetCommit->head;
-       // a valid commit number has been entered
+        // a valid commit number has been entered
         while (fileCrawlerForCheck != nullptr)
         {
-            // while (fileCrawlerCurrCommit != nullptr)
-            // {
-                // if (fileCrawlerForCheck->fileName == fileCrawlerCurrCommit->fileName)
-                // {
-                    readWrite (fileCrawlerForCheck->fileVersion, fileCrawlerForCheck->fileName, true);
-                // }
-                // else
-                // {
-                //     fileCrawlerCurrCommit = fileCrawlerCurrCommit->next;
-                // }
-            // }
+            // read in adn update files based on checkout versions
+            readWrite (fileCrawlerForCheck->fileVersion, fileCrawlerForCheck->fileName, true);
+
             fileCrawlerForCheck = fileCrawlerForCheck->next;
         }
-        // fileCrawlerForCheck = fileCrawlerForCheck->next;
+
         currentCommit = targetCommit;
 
         cout << endl << "Checkout on commit number: " << commitNum << " successful." << endl;
         return;
     }
-    
 }
 
 // traverse doubleLL
@@ -634,6 +722,7 @@ commitNode* miniGit::DLLSearch(int number)
     // if while loop exits return null
 
     commitNode* crawler = currentCommit;
+    // number is greater than current commit
     if (number > currentCommit->commitNum)
     {
         while (crawler != nullptr)
@@ -652,6 +741,7 @@ commitNode* miniGit::DLLSearch(int number)
         cerr << endl << "ERROR: Invalid commit number - please enter a valid commit number" << endl;
         return nullptr;
     }
+    // number is less than current commit
     else if (number < currentCommit->commitNum)
     {
         while (crawler != nullptr)
@@ -679,7 +769,7 @@ commitNode* miniGit::DLLSearch(int number)
 }
 
 // search singleLL - used to see if a file already was added to commit list
-bool miniGit::SLLSearch(string file)
+fileNode* miniGit::SLLSearch(string file)
 {
     // search for file
     fileNode* tmp = currentCommit->head;
@@ -688,12 +778,13 @@ bool miniGit::SLLSearch(string file)
     {
         if (tmp->fileName == file)
         {
-            return true;        // file was found
+            return tmp;        // file was found
         }
+
         tmp = tmp->next;
     }
 
-    return false;
+    return nullptr;
 }
 
 // copying file contents to another file
@@ -705,6 +796,7 @@ void miniGit::readWrite(string readFrom, string writeTo, bool isCheck)
     ifstream readFile;
     ofstream writeFile;
 
+    // different set ups for whether this fucntion was called by commit or checkout
     if (!isCheck)
     {
         readFile.open(readFrom);
@@ -756,6 +848,8 @@ bool miniGit::isEqual(string readFrom, string writeTo, bool afterCO)
 {
     ifstream readFile;
     ifstream writeFile;
+
+    // different set ups if this was called in normal commit or after a checkout
     if (afterCO)
     {
         readFile.open("./.minigit/" + readFrom);
