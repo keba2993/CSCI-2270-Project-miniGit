@@ -80,7 +80,7 @@ int main()
                                 cerr << endl << "ERROR: Invalid file name -- cannot add to miniGit" << endl;
                                 isAcceptable = false;
                             }
-                            cout << isAcceptable << endl; 
+                            // cout << isAcceptable << endl; 
 
                             file.close();
 
@@ -98,9 +98,11 @@ int main()
                     }
 
                     git->removeFile(input);
+                    git->printGit();
                     break;
                 case 4: // commit changes
                     git->commit();
+                    git->printGit();
                     break;
                 case 5: // checkout a commit
                     if (git->getCurrent() != nullptr)
@@ -125,6 +127,7 @@ int main()
                     }
 
                     git->checkout(commitNum);
+                    git->printGit();
                     break;
                 case 6: // quit the program
                     cout << "Thank you for using miniGit!" << endl;

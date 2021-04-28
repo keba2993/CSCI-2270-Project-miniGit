@@ -554,21 +554,21 @@ void miniGit::checkCommit()
     while (crawler != nullptr)
     {
         //we have found the corresponding file and now need to compare it
-        // if (isEqual(crawler->fileName, crawler->fileVersion, false))
-        // {
-        //     // do nothing
-        //     // the files are equal and there is no need to readWrite
-        // }
-        // else
-        // {
-            cout << crawler->versionNum << "   " << prevCrawl->versionNum << endl;
+        if (isEqual(crawler->fileName, crawler->fileVersion, false))
+        {
+            // do nothing
+            // the files are equal and there is no need to readWrite
+        }
+        else
+        {
+            // cout << crawler->versionNum << "   " << prevCrawl->versionNum << endl;
             // making new version name for this file - since edits were made
             crawler->versionNum = prevCrawl->versionNum + 1;
             crawler->fileVersion = makeVersion(crawler->fileName, crawler->versionNum);
 
             // copying main file contents to new version file
             readWrite(crawler->fileName, crawler->fileVersion, false);
-        // }
+        }
 
         crawler = crawler->next;
         prevCrawl = prevCrawl->next;
@@ -619,7 +619,7 @@ void miniGit::checkout(int commitNum)
         // fileCrawlerForCheck = fileCrawlerForCheck->next;
         currentCommit = targetCommit;
 
-        cout << "Checkout on commit number: " << commitNum << " successful." << endl;
+        cout << endl << "Checkout on commit number: " << commitNum << " successful." << endl;
         return;
     }
     
@@ -638,7 +638,7 @@ commitNode* miniGit::DLLSearch(int number)
     {
         while (crawler != nullptr)
         {
-            cout << crawler->commitNum << endl;
+            // cout << crawler->commitNum << endl;
             if (number == crawler->commitNum)
             {
                 return crawler;
